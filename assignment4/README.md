@@ -41,6 +41,34 @@ I was excited when the first unit test work, enjoy the time of practising TDD. A
 
 I can't step too far to typescript unit test perfect and since it is the first assignment to submit.
 
+## Build & Dockerized
+
+Idealy build and run time should different stage. We need more dependancies when build but actually most of them are not really needed by run time. Here is an idea to release small package to run time:
+
+1. Build with complete depedancies which defined in devDependencies of [package.json](./package.json). We may run below command:
+> npm i --production=false
+
+2. Build it with below command:
+> npm run build
+
+3. Clean up the node_modules
+> rm -rf node_modules
+> npm cache clean --force
+
+4. Install minimun required packages
+> npm i --production
+
+5. [Dockerfile](./Dockerfile) is ready and was built successfully by using below command:
+> docker build . -t student-api
+
+Note: I don't push any docker hub since it is not required any where
+
+## Run it in container
+
+Run below docker command and it forward same port (3000) via localhost:
+> docker run --publish 3000:3000 student-api
+
+
 
 [express]: https://www.npmjs.com/package/express
 

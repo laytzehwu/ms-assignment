@@ -3,9 +3,9 @@ import { PatternDemo } from './pattern-demo';
 import { StudentPatternImpt } from './modules/student';
 
 const app: Express = express();
-
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
 const handler: PatternDemo = new PatternDemo(StudentPatternImpt.getInstace());
-
 app.all('/*', (req: Request, res: Response, next: NextFunction) => {
 	handler.handle(req, res);
 	next();

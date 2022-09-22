@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
+    "start": "node index",
+    "start-dev": "node built/index",
     "test": "nyc ./node_modules/.bin/_mocha 'test/**/*.spec.ts'"
   },
   "repository": {

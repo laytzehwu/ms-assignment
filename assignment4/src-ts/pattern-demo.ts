@@ -12,7 +12,14 @@ export class PatternDemo {
     handleGet(request: Request, response: Response): void {
         switch(request.path) {
             case '/all':
-                response.json(this.service.getAllStudents());
+                response.json(
+                    this.service.getAllStudents().map( (student: Student) => {
+                        return {
+                            studentNo: student.getStudentNo(),
+                            name: student.getName()
+                        };
+                    })
+                );
                 return;
         }
         response.status(404).end();
@@ -26,17 +33,20 @@ export class PatternDemo {
 
             case 'POST':
                 // To create a new student record
-                this.service.addStudent(new Student(JSON.parse(request.body)));
+                this.service.addStudent(new Student(request.body));
+                response.sendStatus(201);
                 return;
 
             case 'PUT':
                 // To update an existing study record
-                this.service.updateStudent(new Student(JSON.parse(request.body)));
+                this.service.updateStudent(new Student(request.body));
+                response.sendStatus(201);
                 return;
             
             case 'DELETE':
                 // To delete an existing study record
-                this.service.deleteStudent(new Student(JSON.parse(request.body)));
+                this.service.deleteStudent(new Student(request.body));
+                response.sendStatus(201);
                 return;
         }
         response.status(404).end();
