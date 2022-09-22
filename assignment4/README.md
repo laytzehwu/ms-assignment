@@ -4,7 +4,7 @@
 
 ## Dependancy Injection (DI)
 
-This is a typical DI example, it helps us to make our depedance classes (most of the time they are services) loosely coupled with their users. Some time, we want those users refer another implementation. You may see my unit test of controller.
+This is a typical DI example, it helps us to make our depedance classes (most of the time they are services) loosely coupled with their users. Some time, we want those users refer another implementation. You may see my unit test of controller [pattern-demo.spec.ts](./test/pattern-demo.spec.ts), it override the service by defining a mock object which implemented interface [StudentPattern](./src-ts/modules/student/student-pattern.ts).
 
 ## Show Case
 
