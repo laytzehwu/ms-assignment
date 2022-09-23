@@ -1,8 +1,19 @@
-# Exercise to deploy MonggoDB & Monggo Express
+# Exercise to deploy MongoDB & Mongo Express
+
+![Case study](./assets/mongoDB.jpg "Offer an admin tools")
+
+There are something to be provisioned get the MongoDB admin tools be accessibile like a Website. They can provisioned in below sequence:
+
+1. [Namespace] group relate stuff
+2. [Secret] keeps credential for MongoDB
+3. A [Service] with a [Deployment] which run [Pods] contains [mongo] image, we need [Secret] to tell credential when MongoDB is being setting up
+4. [ConfigMap] to keep the url of [mongo]'s [Service]
+5. 2nd [Service] with a [Deployment] with [mongo-express] image where we need [ConfigMap] to tell the url of [mongo]'s [Service]
+6. [Ingress] maks [mongo-express]'s [Service] to a website, not just domain but other stuf like tls
 
 ## Namespace
 
-I have created a namespace **ahlay-namespace**, see [namespace.yml](./templates/namespace.yml). It is an idea to group related resources. The namespace was created by run below kubectl command:
+I have created a [Namespace] named **ahlay-namespace**, see [namespace.yml](./templates/namespace.yml). It is an idea to group related resources. The namespace was created by run below kubectl command:
 
 > kubectl apply -f templates/namespace.yml
 
@@ -10,7 +21,7 @@ Note: I tried to relate what I did with *openshift-template.yml* before. So that
 
 ## Prerequisite of mongo
 
-I tried to use [mongo](https://hub.docker.com/_/mongo) and found prerequisite of using it. It is expecting username and password to be passed in by environment variables:
+I tried to use [mongo] and found prerequisite of using it. It is expecting username and password to be passed in by environment variables:
 
 - MONGO_INITDB_ROOT_USERNAME - Root user name
 - MONGO_INITDB_ROOT_PASSWORD - Root password
@@ -68,9 +79,10 @@ By the way, there is more options from [Ingress] like domain and specify tls. He
 
 > kubectl apply -f templates/ingress.yml
 
-
 [Openshift]: https://www.redhat.com/en/technologies/cloud-computing/openshift
+[Namespace]: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/
 [Deployment]: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+[Pods]: https://kubernetes.io/docs/concepts/workloads/pods/
 [Service]: https://kubernetes.io/docs/concepts/services-networking/service/
 [Secret]: https://kubernetes.io/docs/concepts/configuration/secret/
 [ConfigMap]: https://kubernetes.io/docs/concepts/configuration/configmap/
@@ -78,4 +90,4 @@ By the way, there is more options from [Ingress] like domain and specify tls. He
 [secret.yml]: ./templates/secret.yml
 [mongo.yml]: ./templates/mongo.yml
 [mongo-express]: https://hub.docker.com/_/mongo-express
-
+[mongo]: https://hub.docker.com/_/mongo
