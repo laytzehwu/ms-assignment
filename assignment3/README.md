@@ -60,6 +60,13 @@ Then it is sufficient to draft [mongo_express.yml](./templates/mongo_express.yml
 
 > kubectl apply -f templates/mongo_express.yml
 
+## Ingress
+
+Although set [mongo-express] type to [LoadBalancer](https://kubernetes.io/docs/concepts/services-networking/service/#loadbalancer) can provision a load balancer and specify an external IP to be accessed outside the cluster.
+
+By the way, there is more options from [Ingress] like domain and specify tls. Here by, I drafted [ingress.yml](./templates/ingress.yml) where configure host **ahlay.com** (of course I am not going register this domain ;) ). Run below command to provision a new [Ingress] named **mongodb-ingress**:
+
+> kubectl apply -f templates/ingress.yml
 
 
 [Openshift]: https://www.redhat.com/en/technologies/cloud-computing/openshift
@@ -67,6 +74,7 @@ Then it is sufficient to draft [mongo_express.yml](./templates/mongo_express.yml
 [Service]: https://kubernetes.io/docs/concepts/services-networking/service/
 [Secret]: https://kubernetes.io/docs/concepts/configuration/secret/
 [ConfigMap]: https://kubernetes.io/docs/concepts/configuration/configmap/
+[Ingress]: https://kubernetes.io/docs/concepts/services-networking/ingress/
 [secret.yml]: ./templates/secret.yml
 [mongo.yml]: ./templates/mongo.yml
 [mongo-express]: https://hub.docker.com/_/mongo-express

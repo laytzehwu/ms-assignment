@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mongodb-ingress
+  namespace: ahlay-namespace
+spec:
+  rules:
+    - host: ahlay.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: mongodb-express-service
+                port:
+                  number: 8081
