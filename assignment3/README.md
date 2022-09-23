@@ -10,7 +10,7 @@ Note: I tried to relate what I did with *openshift-template.yml* before. So that
 
 ## Prerequisite of mongo
 
-I tried to use [mongo image](https://hub.docker.com/_/mongo) and found prerequisite of using it. It is expecting username and password to be passed in by environment variables:
+I tried to use [mongo](https://hub.docker.com/_/mongo) and found prerequisite of using it. It is expecting username and password to be passed in by environment variables:
 
 - MONGO_INITDB_ROOT_USERNAME - Root user name
 - MONGO_INITDB_ROOT_PASSWORD - Root password
@@ -40,14 +40,34 @@ Note: It seem like storing password in the repo, and not accepted in actual prac
 
 ## Mongo service
 
-Same as [Openshift], Pod is a smallest unit and run one or more containers. From the best practise I just read, defines [Deployment] where includes [ReplicaSet](https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/) maintain a stable set of Pods. Beside the Pods themself, we want it to be accessable. This is the reason to add [Service]. I have drafted [mongo.yml] where define `image: mongo` in **containers** spec. By the way, **mongodb-secret** is being referred via **secretKeyRef** for environment variables **MONGO_INITDB_ROOT_USERNAME** and **MONGO_INITDB_ROOT_PASSWORD**. Run [mongo.yml] like below command to create [Deployment] and [Service]:
+Same as [Openshift], Pod is a smallest unit and run one or more containers. From the best practise I just read, defines [Deployment] where includes [ReplicaSet](https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/) maintain a stable set of Pods. Beside the Pods themself, we want it to be accessable. This is the reason to add [Service]. I have drafted [mongo.yml] where define `image: mongo` in **containers** spec. By the way, **mongodb-secret** is being referred via **secretKeyRef** for environment variables **MONGO_INITDB_ROOT_USERNAME** and **MONGO_INITDB_ROOT_PASSWORD**. Run [mongo.yml] like below command to create a new [Deployment] named **mongodb-deployment** and a new [Service] named **mongodb-service**:
 
 > kubectl apply -f templates/mongo.yml
- 
+
+## ConfigMap is required by mongo-express
+
+From the documentation of [mongo-express], there is an expected environment variable **ME_CONFIG_MONGODB_SERVER** to appoint **mongo**. Same as [Openshift], Kubernetes offers [ConfigMap] (actually they are the same, [Openshift] inherit from Kubernetes) which stores settings not sensitive. 
+
+I drafted [configmap](./templates/configmap.yml) where introduce a new [ConfigMap] named **mongodb-configmap** to obtain **database_url** of **mongodb-service** by running below command:
+
+> kubectl apply -f templates/configmap.yml
+
+Another 2 environment variables:
+- ME_CONFIG_MONGODB_ADMINUSERNAME - user name which can be served by key **mongo-root-username** of **mongodb-secret** [Secret]
+- ME_CONFIG_MONGODB_ADMINPASSWORD - password which can be served by key **mongo-root-password** of **mongodb-secret** [Secret]
+
+Then it is sufficient to draft [mongo_express.yml](./templates/mongo_express.yml) to create a new [Deployment] named **mongodb-express-deployment** and a new [Service] named **mongodb-express-service**. Let's run below command:
+
+> kubectl apply -f templates/mongo_express.yml
+
+
 
 [Openshift]: https://www.redhat.com/en/technologies/cloud-computing/openshift
 [Deployment]: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
 [Service]: https://kubernetes.io/docs/concepts/services-networking/service/
 [Secret]: https://kubernetes.io/docs/concepts/configuration/secret/
+[ConfigMap]: https://kubernetes.io/docs/concepts/configuration/configmap/
 [secret.yml]: ./templates/secret.yml
 [mongo.yml]: ./templates/mongo.yml
+[mongo-express]: https://hub.docker.com/_/mongo-express
+
