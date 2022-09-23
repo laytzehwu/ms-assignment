@@ -36,4 +36,11 @@ Same like creating namespace, I drafted [secret.yml](./templates/secret.yml) the
 
 > kubectl apply -f templates/secret.yml
 
+## Mongo service
 
+Same as [Openshift], Pod is a smallest unit and run one or more containers. From the best practise I just read, defines [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) where includes [ReplicaSet](https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/) maintain a stable set of Pods. Beside the Pods themself, we want it to be accessable. This is the reason to add [Service](https://kubernetes.io/docs/concepts/services-networking/service/). I have draft [mongo.yml](./templates/mongo.yml), and run it like to create *Deployment* and *Service*:
+
+> kubectl apply -f templates/mongo.yml
+ 
+
+[Openshift]: https://www.redhat.com/en/technologies/cloud-computing/openshift
