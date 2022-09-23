@@ -28,19 +28,26 @@ Then another round to obtain password *YWhsYXktcGFzc3dvcmQ=*:
 
 > echo -n 'ahlay-password' | base64
 
-I am think of making used for [Kubernetes Secrets](https://kubernetes.io/docs/concepts/configuration/secret/). It is a common practise to manage password, key, or other important not suppose to knowed by others.
+I am think of making used for Kubernetes [Secret]. It is a common practise to manage password, key, or other important not suppose to knowed by others.
 
 ## Create Secret
 
-Same like creating namespace, I drafted [secret.yml](./templates/secret.yml) then run it like:
+Same like creating namespace, I drafted [secret.yml] where introduce new [Secret] named **mongodb-secret** to the namespace by run [secret.yml] as below:
 
 > kubectl apply -f templates/secret.yml
 
+Note: It seem like storing password in the repo, and not accepted in actual practise. I believe there must has a better idea to manage such sensitive data or [secret.yml] should be kept separately. 
+
 ## Mongo service
 
-Same as [Openshift], Pod is a smallest unit and run one or more containers. From the best practise I just read, defines [Deployment](https://kubernetes.io/docs/concepts/workloads/controllers/deployment/) where includes [ReplicaSet](https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/) maintain a stable set of Pods. Beside the Pods themself, we want it to be accessable. This is the reason to add [Service](https://kubernetes.io/docs/concepts/services-networking/service/). I have draft [mongo.yml](./templates/mongo.yml), and run it like to create *Deployment* and *Service*:
+Same as [Openshift], Pod is a smallest unit and run one or more containers. From the best practise I just read, defines [Deployment] where includes [ReplicaSet](https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/) maintain a stable set of Pods. Beside the Pods themself, we want it to be accessable. This is the reason to add [Service]. I have drafted [mongo.yml] where define `image: mongo` in **containers** spec. By the way, **mongodb-secret** is being referred via **secretKeyRef** for environment variables **MONGO_INITDB_ROOT_USERNAME** and **MONGO_INITDB_ROOT_PASSWORD**. Run [mongo.yml] like below command to create [Deployment] and [Service]:
 
 > kubectl apply -f templates/mongo.yml
  
 
 [Openshift]: https://www.redhat.com/en/technologies/cloud-computing/openshift
+[Deployment]: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+[Service]: https://kubernetes.io/docs/concepts/services-networking/service/
+[Secret]: https://kubernetes.io/docs/concepts/configuration/secret/
+[secret.yml]: ./templates/secret.yml
+[mongo.yml]: ./templates/mongo.yml
