@@ -1,0 +1,26 @@
+{
+  "name": "order-capture-track-tests",
+  "version": "1.0.0",
+  "description": "Testing package for Order capture and tracking API",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha -r esm units/"
+  },
+  "keywords": [
+    "Unit-Test"
+  ],
+  "author": "Lay Tzeh Wu",
+  "license": "ISC",
+  "dependencies": {
+    "node-fetch": "^3.2.10"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.1223.0",
+    "chai": "^4.3.6",
+    "esm": "^3.2.25",
+    "mocha": "^10.0.0",
+    "nock": "^13.2.9",
+    "sinon": "^14.0.0",
+    "uuid": "^9.0.0"
+  }
+}

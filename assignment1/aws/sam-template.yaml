@@ -1,0 +1,313 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Order capture and tracking API
+  
+Globals:
+  Function:
+    Timeout: 3
+
+# ====================================================================
+#                     PARAMETERS
+# ====================================================================
+
+Parameters:
+  OrderTableName:
+    Type: String
+    Description: "Order table name"
+    AllowedPattern: ".+"
+
+# ====================================================================
+#                     Resources
+# ====================================================================
+
+Resources:
+  # ========================== POLICIES ================================
+  OrderCaptureAccessLogPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: AccessLog
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: "logs:*"
+            Resource: "arn:aws:logs:*:*:*"
+      Roles:
+        - !Ref OrderAPIGatewayRole
+        - !Ref AccountAPIGatewayRole
+        - !Ref StockAPIGatewayRole
+
+  OrderDynamoDBPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Join ["-", [!Ref AWS::StackName, "order-table-policy"]]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: 
+              - dynamodb:GetItem
+              - dynamodb:Scan
+              - dynamodb:Query
+              - dynamodb:PutItem
+              - dynamodb:BatchGetItem
+              - dynamodb:DescribeTable
+            Resource: 
+              - !GetAtt OrderDynamoDBTable.Arn
+      Roles:
+        - !Ref OrderAPIGatewayRole
+
+  AccountUpdateDynamoDBPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Join ["-", [!Ref AWS::StackName, "account-table-policy"]]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: 
+              - dynamodb:PutItem
+            Resource: 
+              - !GetAtt AccountDynamoDBTable.Arn
+      Roles:
+        - !Ref AccountAPIGatewayRole
+
+  StockUpdateDynamoDBPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Join ["-", [!Ref AWS::StackName, "stock-table-policy"]]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: 
+              - dynamodb:PutItem
+            Resource: 
+              - !GetAtt StockDynamoDBTable.Arn
+      Roles:
+        - !Ref StockAPIGatewayRole
+
+  # ========================== ROLES ================================ 
+  OrderAPIGatewayRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join ["-", [!Ref AWS::StackName, "gateway-lambda-role"]]
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      MaxSessionDuration: 3600
+      Path: /
+
+  AccountAPIGatewayRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join ["-", [!Ref AWS::StackName, "account-lambda-role"]]
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      MaxSessionDuration: 3600
+      Path: /
+
+  StockAPIGatewayRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join ["-", [!Ref AWS::StackName, "stock-lambda-role"]]
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      MaxSessionDuration: 3600
+      Path: /
+
+  # ========================== API GATEWAY ================================
+  ApiGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Join ["-", [!Ref AWS::StackName, "api-gateway"]]
+      StageName: Staging
+  ApiUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn: ApiGatewayApi
+    Properties:
+      UsagePlanName: 
+        !Join ["-", [!Ref AWS::StackName, "usage-plan"]] 
+      ApiStages: 
+        - ApiId: !Ref ApiGatewayApi
+          Stage: !Ref ApiGatewayApi.Stage
+      Description: ApiUsagePlan is not mandatory to this assignment. It is good to have and limit the usage.
+      Quota: # Quota makes the api looks expensive to use. It is use protect my wallet.
+        Limit: 10000
+        Period: WEEK
+      Throttle:
+        BurstLimit: 1000
+        RateLimit: 1000
+
+  # ========================== Queue =================================
+
+  # ========================== SNS ===================================
+
+  # ========================== LAMBDA Layer ================================
+  OrderModulesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Join ["-", [!Ref AWS::StackName, "order-modules-layer"]]
+      Description: Shared layer to holder common used for Lambdas
+      ContentUri: ../lambda-layers/
+      CompatibleRuntimes:
+        - nodejs12.x
+      LicenseInfo: "MIT"
+      RetentionPolicy: Retain
+
+
+  # ========================== LAMBDA ================================
+  OrderAPIGatewayFuntion:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["-", [!Ref AWS::StackName, "gateway"]]
+      Description: Lambda receives request from API Gateway
+      CodeUri: ../lambdas/gateway/
+      Handler: index.handler
+      Runtime: nodejs14.x
+      Role: !GetAtt OrderAPIGatewayRole.Arn
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          ORDER_TABLE_NAME: !Ref OrderDynamoDBTable
+          ON_CLOUD: true
+      Layers:
+        - !Ref OrderModulesLayer
+      Events:
+        AddOrderApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /order
+            Method: post
+        CaptureOrderApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /orders
+            Method: post
+        CheckOrderStatusApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /order/{id}/status
+            Method: get
+
+  AccountUpdateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["-", [!Ref AWS::StackName, "account-update"]]
+      Description: Lambda receives request from API Gateway and update account
+      CodeUri: ../lambdas/account-update/
+      Handler: index.handler
+      Runtime: nodejs14.x
+      Role: !GetAtt AccountAPIGatewayRole.Arn
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          ACCOUNT_TABLE_NAME: !Ref AccountDynamoDBTable
+          ON_CLOUD: true
+      Events:
+        AccountApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /account
+            Method: post
+
+  StockUpdateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["-", [!Ref AWS::StackName, "stock-update"]]
+      Description: Lambda receives request from API Gateway and update stock
+      CodeUri: ../lambdas/stock-update/
+      Handler: index.handler
+      Runtime: nodejs14.x
+      Role: !GetAtt StockAPIGatewayRole.Arn
+      Architectures:
+        - x86_64
+      Environment:
+        Variables:
+          STOCK_TABLE_NAME: !Ref StockDynamoDBTable
+          ON_CLOUD: true
+      Events:
+        StockApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /stock
+            Method: post
+
+  # ========================== DYNAMODB ================================
+  OrderDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: 
+        !Join ["-", [!Ref AWS::StackName, !Ref OrderTableName, "dynamodb-table"]]
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: orderId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: orderId
+          KeyType: HASH
+
+  AccountDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: 
+        !Join ["-", [!Ref AWS::StackName, "account", "dynamodb-table"]]
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: customerId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: customerId
+          KeyType: HASH
+
+  StockDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: 
+        !Join ["-", [!Ref AWS::StackName, "stock", "dynamodb-table"]]
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: productId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: productId
+          KeyType: HASH
+
+Outputs:
+  OrderCaptureStackId:
+    Description: "Stack id that generated by SAM"
+    Value: !Ref AWS::StackId
+
+  OrderCaptureApi:
+    Description: "API Gateway endpoint URL to capture order"
+    Value: !Sub "https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/Staging/order/"
+      
+  OrderTable:
+    Description: "Table to store orders"
+    Value: !Ref OrderDynamoDBTable
+    
