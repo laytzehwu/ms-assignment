@@ -1,0 +1,229 @@
+{
+	"info": {
+		"_postman_id": "70b4c137-8ab4-42ff-a25f-e1a31fd8a4c2",
+		"name": "Order capture",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "269817"
+	},
+	"item": [
+		{
+			"name": "Check last order status",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/order/{{lastOrderId}}/status",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"order",
+						"{{lastOrderId}}",
+						"status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add order",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);\r",
+							"pm.collectionVariables.set(\"lastOrderId\", jsonData.orderId);\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"customerId\": \"aaa789\",\r\n    \"items\": [\r\n        {\r\n            \"productId\": \"456\",\r\n            \"qty\": 1\r\n        },\r\n        {\r\n            \"productId\": \"789\",\r\n            \"qty\": 1\r\n        }\r\n    ],\r\n    \"totalAmount\": 187.78\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/order",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"order"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update aaa789 account",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"customerId\": \"aaa789\",\r\n    \"balance\": 1000\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/account",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"account"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update product 456 stock",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"productId\": \"456\",\r\n    \"balance\": 100\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/stock",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"stock"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update product 789 stock",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"productId\": \"789\",\r\n    \"balance\": 100\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/stock",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"stock"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Capture multiple orders",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"orders\": [{\r\n        \"customerId\": \"aaa789\",\r\n        \"items\": [\r\n            {\r\n                \"productId\": \"456\",\r\n                \"qty\": 1\r\n            },\r\n            {\r\n                \"productId\": \"789\",\r\n                \"qty\": 2\r\n            }\r\n        ],\r\n        \"totalAmount\": 100.50\r\n    }, {\r\n        \"customerId\": \"bbb968\",\r\n        \"items\": [\r\n            {\r\n                \"productId\": \"789\",\r\n                \"qty\": 2\r\n            }\r\n        ],\r\n        \"totalAmount\": 30.10\r\n}]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/orders",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"orders"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update bbb968 account",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"customerId\": \"bbb968\",\r\n    \"balance\": 1000\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/account",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"account"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://evpatbye5h.execute-api.ap-southeast-1.amazonaws.com/Staging",
+			"type": "string"
+		},
+		{
+			"key": "lastOrderId",
+			"value": ""
+		}
+	]
+}

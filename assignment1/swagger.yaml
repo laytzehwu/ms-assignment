@@ -1,0 +1,321 @@
+swagger: '2.0'
+info:
+  version: 1.0.0
+  title: Order Capture
+  description: To capture order and track order status
+host: aiy7e5fdpl.execute-api.ap-southeast-1.amazonaws.com
+basePath: /Staging
+tags:
+  - name: order
+    description: Endpoints to capture order and check order status
+  - name: account
+    description: Endpoint to update customer available credit
+  - name: stock
+    description: Endpoint to update product quantity
+schemes:
+  - https
+securityDefinitions:
+  api_key:
+    type: apiKey
+    name: api_key
+    in: header
+  petstore_auth:
+    type: oauth2
+    authorizationUrl: https://petstore.swagger.io/oauth/authorize
+    flow: implicit
+    scopes:
+      read_pets: read your pets
+      write_pets: modify pets in your account
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /order/{orderId}/status:
+    get:
+      tags:
+        - order
+      description: Endpoint to get order status.
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          type: string
+          description: Order id which can be otained when create order
+      responses:
+        '200':
+          description: Order status and process logs
+          schema:
+            $ref: '#/definitions/orderStatus'
+        '404':
+          description: Not Found
+  /order:
+    post:
+      tags:
+        - order
+      description: Endpoint to submit order.
+      parameters:
+        - name: newOrder
+          in: body
+          description: Order detail including customer id, items and totalAmount.
+          required: true
+          schema:
+            $ref: '#/definitions/newOrder'
+      responses:
+        '200':
+          description: Complete order payload including orderId
+          schema:
+            $ref: '#/definitions/order'
+        '400':
+          description: Order submitted payload validation fail
+          schema:
+            $ref: '#/definitions/orderError'
+  /orders:
+    post:
+      tags:
+        - order
+      description: Endpoint to submit multiple orders.
+      parameters:
+        - name: newOrders
+          in: body
+          description: Multiple order detail including customer id, items and totalAmount.
+          required: true
+          schema:
+            $ref: '#/definitions/newOrders'
+      responses:
+        '200':
+          description: Complete order payload including orderId
+          schema:
+            $ref: '#/definitions/orders'
+  /account:
+    post:
+      tags:
+        - account
+      description: Endpoint to customer available credit with customerId.
+      parameters:
+        - name: account
+          in: body
+          description: Multiple order detail including customer id, items and totalAmount.
+          required: true
+          schema:
+            $ref: '#/definitions/account'
+      responses:
+        '202':
+          description: Return updated account payload with updating time
+          schema:
+            $ref: '#/definitions/accountResponse'
+  /stock:
+    post:
+      tags:
+        - stock
+      description: Endpoint to update product stock quantity.
+      parameters:
+        - name: stock
+          in: body
+          description: Multiple order detail including customer id, items and totalAmount.
+          required: true
+          schema:
+            $ref: '#/definitions/stock'
+      responses:
+        '202':
+          description: Return updated account payload with updating time
+          schema:
+            $ref: '#/definitions/accountResponse'
+definitions:
+  orderItem:
+    type: object
+    properties:
+      productId:
+        type: string
+        example: '456'
+      qty:
+        type: number
+        example: 1
+    required:
+      - productId
+      - qty
+  orderItem2:
+    type: object
+    properties:
+      productId:
+        type: string
+        example: '789'
+      qty:
+        type: number
+        example: 2
+    required:
+      - productId
+      - qty
+  order:
+    type: object
+    properties:
+      orderId:
+        type: string
+        example: 5d269f50-e1e2-4453-a36e-5d6830973167
+      customerId:
+        type: string
+        example: aaa789
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/orderItem'
+      totalAmount:
+        type: number
+        example: 100.5
+    required:
+      - customerId
+      - items
+      - totalAmount
+  orders:
+    type: array
+    items:
+      type: object
+      properties:
+        orderId:
+          type: string
+          example: 5d269f50-e1e2-4453-a36e-5d6830973167
+        customerId:
+          type: string
+          example: bbb968
+        items:
+          type: array
+          items:
+            $ref: '#/definitions/orderItem2'
+        totalAmount:
+          type: number
+          example: 100.5
+      required:
+        - customerId
+        - items
+        - totalAmount
+  orderError:
+    type: object
+    properties:
+      status:
+        type: number
+        example: 400
+      description:
+        type: string
+        example: Invalid order payload
+    required:
+      - status
+      - description
+  newOrder:
+    type: object
+    properties:
+      customerId:
+        type: string
+        example: aaa789
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/orderItem'
+      totalAmount:
+        type: number
+        example: 100.5
+    required:
+      - customerId
+      - items
+      - totalAmount
+  newOrder2:
+    type: object
+    properties:
+      customerId:
+        type: string
+        example: bbb968
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/orderItem2'
+      totalAmount:
+        type: number
+        example: 100.5
+    required:
+      - customerId
+      - items
+      - totalAmount
+  newOrders:
+    type: object
+    properties:
+      orders:
+        type: array
+        items:
+          $ref: '#/definitions/newOrder2'
+    required:
+      - orders
+  orderStatus:
+    type: object
+    properties:
+      status:
+        type: string
+        example: Accepted
+      logs:
+        type: array
+        example:
+          - Sufficient account balance
+          - Sufficient stock
+        items:
+          type: string
+  account:
+    type: object
+    properties:
+      customerId:
+        type: string
+        example: bbb968
+      balance:
+        type: number
+        example: 1000
+    required:
+      - customerId
+      - balance
+  accountResponse:
+    type: object
+    properties:
+      code:
+        type: number
+        example: 202
+      updatedPayload:
+        type: object
+        properties:
+          customerId:
+            type: string
+            example: bbb968
+          balance:
+            type: number
+            example: 1000
+          updateTime:
+            type: string
+            example: '2022-09-24T22:30:45.549Z'
+  stock:
+    type: object
+    properties:
+      productId:
+        type: string
+        example: '456'
+      balance:
+        type: number
+        example: 100
+    required:
+      - productId
+      - balance
+  stockResponse:
+    type: object
+    properties:
+      code:
+        type: number
+        example: 202
+      updatedPayload:
+        type: object
+        properties:
+          productId:
+            type: string
+            example: '456'
+          balance:
+            type: number
+            example: 100
+          updateTime:
+            type: string
+            example: '2022-09-24T22:30:45.549Z'
+        required:
+          - productId
+          - balance
