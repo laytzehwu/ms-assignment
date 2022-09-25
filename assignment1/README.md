@@ -18,13 +18,13 @@ By referring [sam-template.yaml], you may see above design.
 
 ![Rest Api](./assets/REST%20Api.jpg)
 
-- [ApiGatewayApi] receives Rest calls from the client and distributes the work to [AWS Lambda].
+- [ApiGatewayApi] is a [AWS Api Gateway](https://aws.amazon.com/api-gateway/), it receives Rest calls from the client and distributes the work to [AWS Lambda].
 
 - [OrderAPIGatewayFuntion](./aws/sam-template.yaml#L414-L450), a [AWS Lambda] receives Rest calls from [ApiGatewayApi] and handles below requests:
 
 | Method |  Path  | Remarks |
 |--------|--------|---------|
-|  POST  | /order | Create an order and store in [OrderDynamoDBTable](#orderdynamodbtable)|
+|  POST  | /order | Create an order and store in [OrderDynamoDBTable](#orderdynamodbtable) |
 |  POST  | /orders| Receives multiple orders with different customers |
 
 - [AccountUpdateFunction](./aws/sam-template.yaml#L452-L473) a [AWS Lambda] receives Rest calls from [ApiGatewayApi] and handles below requests:
@@ -36,7 +36,15 @@ By referring [sam-template.yaml], you may see above design.
 
 ### Fan-out
 
-According to wike [Fan-out](https://en.wikipedia.org/wiki/Fan-out_(software)) is a [message pattern](https://en.wikipedia.org/wiki/Messaging_pattern) used to model an information exchange that implies the delivery (or spreading) of a message to one or multiple destinations possibile in parallel, and not halting the process that executes the message to wait for any response to that message.
+[OrderAPIGatewayFuntion] received the order(s), it just only stores it(them) to [OrderDynamoDBTable](#orderdynamodbtable) then trigger [AWS Simple Notification Service (SNS)].
+
+In this assignment, [OrderTopic] was created and distributes the work to [BalanceCheckerQueue] and [StockCheckerQueue]:
+
+- [OrderTopic] is an [AWS Simple Notification Service (SNS)], not only send email, it also can makes http/https call. Most important is able to trigger [AWS Lambda].
+
+- [BalanceCheckerQueue] is an [AWS Simple Queue Service (SQS)],  
+
+- [StockCheckerQueue] is an [AWS Simple Queue Service (SQS)], 
 
 ## Storage
 
@@ -72,6 +80,11 @@ Because of AWS EKS is expense, my solution is using serverless. There is no cont
 [AWS SAM]: https://aws.amazon.com/serverless/sam/
 [sam-template.yaml]: ./aws/sam-template.yaml
 [AWS Lambda]: https://aws.amazon.com/lambda/
-[DynamoDB]: https://aws.amazon.com/dynamodb 
+[DynamoDB]: https://aws.amazon.com/dynamodb
+[AWS Simple Notification Service (SNS)]: https://aws.amazon.com/sns/ 
+[AWS Simple Queue Service (SQS)]: https://aws.amazon.com/sqs/
 
 [ApiGatewayApi]: ./aws/sam-template.yaml#L330-L350
+[OrderTopic]: ./aws/sam-template.yamll#L374-L398
+[BalanceCheckerQueue]: ./aws/sam-template.yaml#L353-L358
+[StockCheckerQueue] ./aws/sam-template.yaml#L360-L365
