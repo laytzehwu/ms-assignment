@@ -20,7 +20,7 @@ By referring [sam-template.yaml], you may see above design.
 
 - [ApiGatewayApi] is a [AWS Api Gateway](https://aws.amazon.com/api-gateway/), it receives Rest calls from the client and distributes the work to [AWS Lambda].
 
-- [OrderAPIGatewayFuntion](./aws/sam-template.yaml#L414-L450), a [AWS Lambda] receives Rest calls from [ApiGatewayApi] and handles below requests:
+- [OrderAPIGatewayFuntion], a [AWS Lambda] receives Rest calls from [ApiGatewayApi] and handles below requests:
 
 | Method |  Path  | Remarks |
 |--------|--------|---------|
@@ -86,5 +86,6 @@ Because of AWS EKS is expense, my solution is using serverless. There is no cont
 
 [ApiGatewayApi]: ./aws/sam-template.yaml#L330-L350
 [OrderTopic]: ./aws/sam-template.yamll#L374-L398
+[OrderAPIGatewayFuntion]: ./aws/sam-template.yaml#L414-L450
 [BalanceCheckerQueue]: ./aws/sam-template.yaml#L353-L358
 [StockCheckerQueue] ./aws/sam-template.yaml#L360-L365
