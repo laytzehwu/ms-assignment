@@ -88,4 +88,4 @@ Because of AWS EKS is expense, my solution is using serverless. There is no cont
 [OrderTopic]: ./aws/sam-template.yamll#L374-L398
 [OrderAPIGatewayFuntion]: ./aws/sam-template.yaml#L414-L450
 [BalanceCheckerQueue]: ./aws/sam-template.yaml#L353-L358
-[StockCheckerQueue] ./aws/sam-template.yaml#L360-L365
+[StockCheckerQueue]: ./aws/sam-template.yaml#L360-L365
