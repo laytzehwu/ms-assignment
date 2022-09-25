@@ -14,16 +14,45 @@ You may refer [swagger.yaml](./swagger.yaml). Unfortunately, my company laptop o
 
 By referring [sam-template.yaml], you may see above design.
 
-
 ### Rest Api
 
-[ApiGatewayApi](./aws/sam-template.yaml#L330-L350) receives Rest calls from the client and distributes the work to [AWS Lambda].
+![Rest Api](./assets/REST%20Api.jpg)
+
+- [ApiGatewayApi] receives Rest calls from the client and distributes the work to [AWS Lambda].
+
+- [OrderAPIGatewayFuntion](./aws/sam-template.yaml#L414-L450), a [AWS Lambda] receives Rest calls from [ApiGatewayApi] and handles below requests:
+
+| Method |  Path  | Remarks |
+|--------|--------|---------|
+|  POST  | /order | Create an order and store in [OrderDynamoDBTable](#orderdynamodbtable)|
+|  POST  | /orders| Receives multiple orders with different customers |
+
+- [AccountUpdateFunction](./aws/sam-template.yaml#L452-L473) a [AWS Lambda] receives Rest calls from [ApiGatewayApi] and handles below requests:
+
+| Method |  Path  | Remarks |
+|--------|--------|---------|
+|  POST  | /account | Create an order and store in [AccountDynamoDBTable](#accountdynamodbtable)|
+
 
 ### Fan-out
 
 According to wike [Fan-out](https://en.wikipedia.org/wiki/Fan-out_(software)) is a [message pattern](https://en.wikipedia.org/wiki/Messaging_pattern) used to model an information exchange that implies the delivery (or spreading) of a message to one or multiple destinations possibile in parallel, and not halting the process that executes the message to wait for any response to that message.
 
+## Storage
 
+By using [DynamoDB] and creates tables as below:
+
+### OrderDynamoDBTable
+
+[OrderDynamoDBTable](./aws/sam-template.yaml#L596-L607) stores orders.
+
+### AccountDynamoDBTable
+
+[AccountDynamoDBTable](./aws/sam-template.yaml#L609-L620) stores credit balance as field *balance* with field *customerId*. Just simple design to tell how credit that the customer has.
+
+### StockDynamoDBTable
+
+[StockDynamoDBTable](./aws/sam-template.yaml#L622-L633) stores stock balance as field *balance* with field *productId*. It represent how of that specific product can be sold.
 
 ## Deployment
 
@@ -42,4 +71,7 @@ Because of AWS EKS is expense, my solution is using serverless. There is no cont
 [CloudFormation]: https://aws.amazon.com/cloudformation/
 [AWS SAM]: https://aws.amazon.com/serverless/sam/
 [sam-template.yaml]: ./aws/sam-template.yaml
-[AWS Lambda]: https://aws.amazon.com/lambda/ 
+[AWS Lambda]: https://aws.amazon.com/lambda/
+[DynamoDB]: https://aws.amazon.com/dynamodb 
+
+[ApiGatewayApi]: ./aws/sam-template.yaml#L330-L350
