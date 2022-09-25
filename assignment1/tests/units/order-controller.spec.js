@@ -176,7 +176,7 @@ describe('OrderController', () => {
                     {productId: 456,qty: 1},
                     {productId: 789,qty: 2},
                 ],
-                totalAmout: 100.50
+                totalAmount: 100.50
             };
             beforeEach(() => {
                 controller = OrderController.getInstance();
@@ -214,7 +214,7 @@ describe('OrderController', () => {
 
                 it('should pass-in total amount service.addOrder', () => {
                     const passInPayload = controller.service.addOrder.firstArg;
-                    assert.equal(passInPayload.totalAmout, mockOrderPayload.totalAmout);
+                    assert.equal(passInPayload.totalAmount, mockOrderPayload.totalAmount);
                 });
 
                 it('should pass-in all the items', () => {
@@ -240,21 +240,21 @@ describe('OrderController', () => {
                         {productId: 456,qty: 1},
                         {productId: 789,qty: 2},
                     ],
-                    totalAmout: 100.50
+                    totalAmount: 100.50
                 },
                 {
                     customerId: 'bbb653',
                     items: [
                         {productId: 456,qty: 1},
                     ],
-                    totalAmout: 30.10
+                    totalAmount: 30.10
                 },
                 {
                     customerId: 'bbb653',
                     items: [
                         {productId: 789,qty: 2},
                     ],
-                    totalAmout: 70.10
+                    totalAmount: 70.10
                 },
             ];
             beforeEach(() => {

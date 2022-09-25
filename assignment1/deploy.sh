@@ -79,11 +79,14 @@ if [[ $CONFIRM_CODE == "Y" ]] || [[ $CONFIRM_CODE == "y" ]]
 then
   clear;
   printSeparator
+  printHeader
+  printSeparator
   printColored "Capture Order API deployment";
   printSeparator
 else
   clear;
 
+  printHeader
   printSeparator
   printError "Aborting deployment in 3 seconds... ";
   sleep 1;

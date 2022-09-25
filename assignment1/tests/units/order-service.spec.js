@@ -67,7 +67,7 @@ describe('OrderService', () => {
                 {productId: 456,qty: 1},
                 {productId: 789,qty: 2},
             ],
-            totalAmout: 100.50,
+            totalAmount: 100.50,
             status: 'Pending',
             accountChecked: false,
             stockChecked: false,
@@ -125,7 +125,7 @@ describe('OrderService', () => {
                     {productId: 456,qty: 1},
                     {productId: 789,qty: 2},
                 ],
-                totalAmout: 100.50,
+                totalAmount: 100.50,
             };
         });
 
@@ -138,8 +138,18 @@ describe('OrderService', () => {
             );
         });
 
+        beforeEach(() => {
+            sinon.replace(
+                service.sns, 'publish',
+                sinon.fake.returns({
+                    promise: () => Promise.resolve({})
+                })
+            );
+        });
+
+        let order;
         beforeEach(async () => {
-            orderStatus = await service.addOrder(mockOrder);
+            order = await service.addOrder(mockOrder);
         });
 
         it('should call DynamoDB API put', () => {
@@ -154,6 +164,40 @@ describe('OrderService', () => {
         it('should put order payload to order table', () => {
             const Item = service.docClient.put.firstArg.Item;
             assert.equal(Item, mockOrder);
+        });
+
+        it('should sns service to publish', () => {
+            assert.isTrue(service.sns.publish.called);
+        });
+
+        it('should set order id in SNS title', () => {
+            const subject = service.sns.publish.firstArg.Subject;
+            expect(subject).to.include(order.orderId);
+        });
+
+        it('should embed orderId in SNS message', () => {
+            const message = JSON.parse(service.sns.publish.firstArg.Message);
+            assert.equal(message.orderId, order.orderId);
+        });
+
+        it('should embed customerId in SNS message', () => {
+            const message = JSON.parse(service.sns.publish.firstArg.Message);
+            assert.equal(message.customerId, mockOrder.customerId);
+        });
+
+        it('should embed totalAmount in SNS message', () => {
+            const message = JSON.parse(service.sns.publish.firstArg.Message);
+            assert.equal(message.totalAmount, mockOrder.totalAmount);
+        });
+
+        it('should embed all items in SNS message', () => {
+            const message = JSON.parse(service.sns.publish.firstArg.Message);
+            const items = message.items;
+            mockOrder.items.forEach(expectItem => {
+                const matchedItem = items.find(i => i.productId == expectItem.productId);
+                expect(matchedItem).not.to.be.undefined;
+                assert.equal(matchedItem.qty, expectItem.qty);
+            });
         });
     });
 

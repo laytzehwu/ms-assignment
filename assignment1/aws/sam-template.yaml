@@ -37,6 +37,10 @@ Resources:
         - !Ref OrderAPIGatewayRole
         - !Ref AccountAPIGatewayRole
         - !Ref StockAPIGatewayRole
+        - !Ref BalanceCheckerRole
+        - !Ref StockCheckerRole
+        - !Ref OrderUpdateRole
+        - !Ref ShipOrderRole
 
   OrderDynamoDBPolicy:
     Type: AWS::IAM::Policy
@@ -57,11 +61,13 @@ Resources:
               - !GetAtt OrderDynamoDBTable.Arn
       Roles:
         - !Ref OrderAPIGatewayRole
+        - !Ref OrderUpdateRole
+        - !Ref ShipOrderRole
 
   AccountUpdateDynamoDBPolicy:
     Type: AWS::IAM::Policy
     Properties:
-      PolicyName: !Join ["-", [!Ref AWS::StackName, "account-table-policy"]]
+      PolicyName: !Join ["-", [!Ref AWS::StackName, "account-update-policy"]]
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -72,6 +78,27 @@ Resources:
               - !GetAtt AccountDynamoDBTable.Arn
       Roles:
         - !Ref AccountAPIGatewayRole
+        - !Ref ShipOrderRole
+
+  BalanceDynamoDBPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Join ["-", [!Ref AWS::StackName, "balance-policy"]]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: 
+              - dynamodb:GetItem
+              - dynamodb:Scan
+              - dynamodb:Query
+              - dynamodb:BatchGetItem
+              - dynamodb:DescribeTable
+            Resource: 
+              - !GetAtt AccountDynamoDBTable.Arn
+      Roles:
+        - !Ref BalanceCheckerRole
+        - !Ref ShipOrderRole
 
   StockUpdateDynamoDBPolicy:
     Type: AWS::IAM::Policy
@@ -87,6 +114,107 @@ Resources:
               - !GetAtt StockDynamoDBTable.Arn
       Roles:
         - !Ref StockAPIGatewayRole
+        - !Ref ShipOrderRole
+
+  StockCheckDynamoDBPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Join ["-", [!Ref AWS::StackName, "stock-check-policy"]]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: 
+              - dynamodb:GetItem
+              - dynamodb:Scan
+              - dynamodb:Query
+              - dynamodb:BatchGetItem
+              - dynamodb:DescribeTable
+            Resource: 
+              - !GetAtt StockDynamoDBTable.Arn
+      Roles:
+        - !Ref StockCheckerRole
+        - !Ref ShipOrderRole
+
+  OrderTopicPolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: OrderTopic
+    Properties:
+      PolicyName: !Join ["-", [!Ref AWS::StackName, "order-topic-policy"]]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: 
+              - sns:Publish
+            Resource: !Ref OrderTopic 
+      Roles:
+        - !Ref OrderAPIGatewayRole
+
+  BalanceCheckerQueryPolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: BalanceCheckerQueue
+    Properties:
+      PolicyName: !Join ["-", [!Ref AWS::StackName, "balance-checker-queue-policy"]]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: 
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+            Resource: !GetAtt BalanceCheckerQueue.Arn 
+      Roles:
+        - !Ref BalanceCheckerRole
+
+  StockCheckerQueryPolicy:
+    Type: AWS::IAM::Policy
+    DependsOn: StockCheckerQueue
+    Properties:
+      PolicyName: !Join ["-", [!Ref AWS::StackName, "stock-checker-queue-policy"]]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: 
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+            Resource: !GetAtt StockCheckerQueue.Arn 
+      Roles:
+        - !Ref StockCheckerRole
+
+  OrderUpdateProducePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Join ["-", [!Ref AWS::StackName, "update-order-produce-policy"]]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: 
+              - sqs:SendMessage
+            Resource: !GetAtt OrderUpdateQueue.Arn 
+      Roles:
+        - !Ref BalanceCheckerRole
+        - !Ref StockCheckerRole
+
+  OrderUpdateConsumerPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Join ["-", [!Ref AWS::StackName, "update-order-consumer-policy"]]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action: 
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+            Resource: !GetAtt OrderUpdateQueue.Arn 
+      Roles:
+        - !Ref OrderUpdateRole
 
   # ========================== ROLES ================================ 
   OrderAPIGatewayRole:
@@ -119,10 +247,74 @@ Resources:
       MaxSessionDuration: 3600
       Path: /
 
+  BalanceCheckerRole:
+    Type: AWS::IAM::Role
+    DependsOn: BalanceCheckerQueue
+    Properties:
+      RoleName: !Join ["-", [!Ref AWS::StackName, "balance-checker-lambda-role"]]
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      MaxSessionDuration: 3600
+      Path: /
+
   StockAPIGatewayRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Join ["-", [!Ref AWS::StackName, "stock-lambda-role"]]
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      MaxSessionDuration: 3600
+      Path: /
+
+  StockCheckerRole:
+    Type: AWS::IAM::Role
+    DependsOn: StockCheckerQueue
+    Properties:
+      RoleName: !Join ["-", [!Ref AWS::StackName, "stock-checker-lambda-role"]]
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      MaxSessionDuration: 3600
+      Path: /
+
+  OrderUpdateRole:
+    Type: AWS::IAM::Role
+    DependsOn: OrderUpdateQueue
+    Properties:
+      RoleName: !Join ["-", [!Ref AWS::StackName, "order-update-lambda-role"]]
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action: sts:AssumeRole
+      MaxSessionDuration: 3600
+      Path: /
+
+  ShipOrderRole:
+    Type: AWS::IAM::Role
+    DependsOn: OrderUpdateQueue
+    Properties:
+      RoleName: !Join ["-", [!Ref AWS::StackName, "ship-order-lambda-role"]]
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -158,8 +350,52 @@ Resources:
         RateLimit: 1000
 
   # ========================== Queue =================================
+  BalanceCheckerQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join ["-", [!Ref AWS::StackName, "balance-checker-queue"]]
+      VisibilityTimeout: 300 # Wait for 5 minutes after previous attempt fail
+      MessageRetentionPeriod: 3600 # Decrease message expire to 1 hours 
 
+  StockCheckerQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join ["-", [!Ref AWS::StackName, "stock-checker-queue"]]
+      VisibilityTimeout: 300 # Wait for 5 minutes after previous attempt fail
+      MessageRetentionPeriod: 3600 # Decrease message expire to 1 hours 
+
+  OrderUpdateQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join ["-", [!Ref AWS::StackName, "order-update-queue"]]
+      VisibilityTimeout: 300 # Wait for 5 minutes after previous attempt fail
+      MessageRetentionPeriod: 3600 # Decrease message expire to 1 hours 
   # ========================== SNS ===================================
+  OrderTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      DisplayName: !Join ["-", [!Ref AWS::StackName, 'order-msg']]
+      TopicName: !Join ["-", [!Ref AWS::StackName, 'order-msg']]
+
+  BalanceCheckerSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref OrderTopic
+      Endpoint: !GetAtt 
+        - BalanceCheckerQueue
+        - Arn
+      Protocol: sqs
+      RawMessageDelivery: 'true'
+
+  StockCheckerSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref OrderTopic
+      Endpoint: !GetAtt 
+        - StockCheckerQueue
+        - Arn
+      Protocol: sqs
+      RawMessageDelivery: 'true'
 
   # ========================== LAMBDA Layer ================================
   OrderModulesLayer:
@@ -188,8 +424,9 @@ Resources:
         - x86_64
       Environment:
         Variables:
-          ORDER_TABLE_NAME: !Ref OrderDynamoDBTable
           ON_CLOUD: true
+          ORDER_TABLE_NAME: !Ref OrderDynamoDBTable
+          SNS_TOPIC: !Ref OrderTopic
       Layers:
         - !Ref OrderModulesLayer
       Events:
@@ -235,6 +472,32 @@ Resources:
             Path: /account
             Method: post
 
+  BalanceCheckerFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: BalanceCheckerQueue
+    Properties:
+      FunctionName: !Join ["-", [!Ref AWS::StackName, "balancer-checker"]]
+      Description: Lambda to ensure customer has sufficient credit
+      CodeUri: ../lambdas/balance-checker/
+      Handler: index.handler
+      Runtime: nodejs14.x
+      Role: !GetAtt BalanceCheckerRole.Arn
+      Architectures:
+        - x86_64
+      Layers:
+        - !Ref OrderModulesLayer
+      Events:
+        BalanceCheckSQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt BalanceCheckerQueue.Arn
+            BatchSize: 1      
+      Environment:
+        Variables:
+          ON_CLOUD: true
+          ACCOUNT_TABLE_NAME: !Ref AccountDynamoDBTable
+          ORDER_UPDATE_QUEUE: !Ref OrderUpdateQueue
+
   StockUpdateFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -257,6 +520,77 @@ Resources:
             RestApiId: !Ref ApiGatewayApi
             Path: /stock
             Method: post
+
+  StockCheckerFunction:
+    Type: AWS::Serverless::Function
+    DependsOn: StockCheckerQueue
+    Properties:
+      FunctionName: !Join ["-", [!Ref AWS::StackName, "stock-checker"]]
+      Description: Lambda to ensure product has sufficient stock
+      CodeUri: ../lambdas/stock-checker/
+      Handler: index.handler
+      Runtime: nodejs14.x
+      Role: !GetAtt StockCheckerRole.Arn
+      Architectures:
+        - x86_64
+      Layers:
+        - !Ref OrderModulesLayer
+      Events:
+        StockCheckSQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt StockCheckerQueue.Arn
+            BatchSize: 1      
+      Environment:
+        Variables:
+          ON_CLOUD: true
+          STOCK_TABLE_NAME: !Ref StockDynamoDBTable
+          ORDER_UPDATE_QUEUE: !Ref OrderUpdateQueue
+
+  OrderUpdateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["-", [!Ref AWS::StackName, "order-update"]]
+      Description: Lambda to update order
+      CodeUri: ../lambdas/order-update/
+      Handler: index.handler
+      Runtime: nodejs14.x
+      Role: !GetAtt OrderUpdateRole.Arn
+      Architectures:
+        - x86_64
+      Layers:
+        - !Ref OrderModulesLayer
+      Events:
+        StockCheckSQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt OrderUpdateQueue.Arn
+            BatchSize: 1      
+      Environment:
+        Variables:
+          ON_CLOUD: true
+          ORDER_TABLE_NAME: !Ref OrderDynamoDBTable
+          SHIP_ORDER_LAMBDA: !Ref ShipOrderFunction
+
+  ShipOrderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Join ["-", [!Ref AWS::StackName, "ship-order"]]
+      Description: Lambda to ship order
+      CodeUri: ../lambdas/ship-order/
+      Handler: index.handler
+      Runtime: nodejs14.x
+      Role: !GetAtt ShipOrderRole.Arn
+      Architectures:
+        - x86_64
+      Layers:
+        - !Ref OrderModulesLayer
+      Environment:
+        Variables:
+          ON_CLOUD: true
+          ORDER_TABLE_NAME: !Ref OrderDynamoDBTable
+          ACCOUNT_TABLE_NAME: !Ref AccountDynamoDBTable
+          STOCK_TABLE_NAME: !Ref StockDynamoDBTable
 
   # ========================== DYNAMODB ================================
   OrderDynamoDBTable:
