@@ -27,7 +27,19 @@ Compare to servers, serverless solution does not really concern of scalability. 
 
 Most of the performance related stuff in [Assignment1] has been offloaded to [AWS Simple Notification Service (SNS)] and [AWS Simple Queue Service (SQS)]. [DynamoDB] is serverless, we are not really worry manage it. 
 
-These services are provided by AWS, we are not really need a lot effort to take care of them.
+These services are provided by AWS, we are not really need a lot effort to take care of them. 
+
+### Reliability
+
+Think about disaster, our data center might not available. All the production services need to have disaster recovery plan (DR), depends on the budget, we may go replicate or backup/restore base below target:
+
+- Recovery Time Objective (RTO), how fast of backup service take place. 
+
+- Recovery Point Objective (RPO), how much data lost is affordable.
+
+### Sustainability
+
+Think about to provide efficient, resilient services. We should bring in Infrastructure as Code (IaC) concept. [CloudFormation] template is in [Assignment1], shows an idea that we can provision environment rapidly and flexible by introduce parameters.
 
 ## Security
 
@@ -43,10 +55,20 @@ A scret key may share to front-end apps or another back-end services. It is easi
 
 We can easily implement OAuth by using [AWS Cognito](https://aws.amazon.com/cognito/). I have used its user pool where can generate JWT to the user and implement authoriser for my API without any coding.
 
+## Firewall
+
+The API can be attacked easily, we need firewalk. 
+
+In my option, there are some cloud solution can implement it easily. For example [AWS WAF], API in [Assignment1] should not expose to the public. It should stand behind [CloudFront] and protected by CDN firewall.
+
 [AWS Api Gateway]: https://aws.amazon.com/api-gateway/
 [AWS Lambda]: https://aws.amazon.com/lambda/
 [DynamoDB]: https://aws.amazon.com/dynamodb
 [AWS Simple Notification Service (SNS)]: https://aws.amazon.com/sns/ 
 [AWS Simple Queue Service (SQS)]: https://aws.amazon.com/sqs/
+
+[AWS WAF]: https://aws.amazon.com/waf/
+[CloudFront]: https://www.amazonaws.cn/en/cloudfront/
+[CloudFormation]: https://aws.amazon.com/cloudformation/
 
 [Assignment1]: ../assignment1/
