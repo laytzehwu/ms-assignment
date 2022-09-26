@@ -110,8 +110,8 @@ Here is mapping between logic and introduced [AWS Lambda]:
 | [StockCheckerFunction] | [stock-checker](./lambdas/stock-checker/index.js) | Typical Lambda but using [ SQSTasker ](./lambda-layers/nodejs/modules/sqs-tasker.js), [BalanceChecker](./lambda-layers/nodejs/modules/balance-checker.js) from [lambda-layers](./lambda-layers/nodejs/modules/). In addition, it calls [sleep](./lambda-layers/nodejs/modules/sleep.js) |
 | [OrderUpdateFunction] | [order-update](./lambdas//order-update/index.js) | Using [OrderService](./lambda-layers/nodejs/modules/order-service.js) beside the basic logic |
 | [ShipOrderFunction] | [ship-order](./lambdas/ship-order/index.js) | Using [ShipService](./lambda-layers/nodejs/modules/ship-service.js) |
-| [AccountUpdateFunction] | [account-update](./lambdas/account-update/index.js) | It is just a convinien tool for testing. Simple lambda practise |
-| [StockUpdateFunction] | [stock-update](./lambdas/stock-update/index.js) | It is just a convinien tool for testing. Simple lambda practise |
+| [AccountUpdateFunction](./aws/sam-template.yaml#L452-L473) | [account-update](./lambdas/account-update/index.js) | It is just a convinien tool for testing. Simple lambda practise |
+| [StockUpdateFunction](./aws/sam-template.yaml#L501-L522) | [stock-update](./lambdas/stock-update/index.js) | It is just a convinien tool for testing. Simple lambda practise |
 
 ## Storage
 
