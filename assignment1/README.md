@@ -102,7 +102,16 @@ Beside the checkers, there is shipment:
 
 ## Logic
 
-
+Here is mapping between logic and introduced [AWS Lambda]:
+| Lambda | Source | Remarks |
+|--------|--------|---------|
+| [OrderAPIGatewayFuntion] | [gateway](./lambdas/gateway/index.js) | You won't much in the Lambda, further logic is in [OrderController](./lambda-layers/nodejs/modules/order-controller.js), it is test cases are at [order-controller.spec.js](./tests/units/order-controller.spec.js) |
+| [BalanceCheckerFunction] | [balance-checker](./lambdas/balance-checker/index.js) | Typical Lambda but using [ SQSTasker ](./lambda-layers/nodejs/modules/sqs-tasker.js), [BalanceChecker](./lambda-layers/nodejs/modules/balance-checker.js) from [lambda-layers](./lambda-layers/nodejs/modules/)  |
+| [StockCheckerFunction] | [stock-checker](./lambdas/stock-checker/index.js) | Typical Lambda but using [ SQSTasker ](./lambda-layers/nodejs/modules/sqs-tasker.js), [BalanceChecker](./lambda-layers/nodejs/modules/balance-checker.js) from [lambda-layers](./lambda-layers/nodejs/modules/). In addition, it calls [sleep](./lambda-layers/nodejs/modules/sleep.js) |
+| [OrderUpdateFunction] | [order-update](./lambdas//order-update/index.js) | Using [OrderService](./lambda-layers/nodejs/modules/order-service.js) beside the basic logic |
+| [ShipOrderFunction] | [ship-order](./lambdas/ship-order/index.js) | Using [ShipService](./lambda-layers/nodejs/modules/ship-service.js) |
+| [AccountUpdateFunction] | [account-update](./lambdas/account-update/index.js) | It is just a convinien tool for testing. Simple lambda practise |
+| [StockUpdateFunction] | [stock-update](./lambdas/stock-update/index.js) | It is just a convinien tool for testing. Simple lambda practise |
 
 ## Storage
 

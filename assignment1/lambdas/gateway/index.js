@@ -9,7 +9,6 @@ const AWS = require('aws-sdk');
 // Set the region 
 AWS.config.update({region: 'ap-southeast-1'});
 
-
 exports.handler = async (event) => {
 	return await OrderController.getInstance().handle(event);
 };
