@@ -70,8 +70,7 @@ class OrderService {
             Subject: `Order ${orderId}`,
             TopicArn: process.env.SNS_TOPIC
         }
-        const snsResult = await this.sns.publish(params).promise();
-        console.log(`snsResult: ${JSON.stringify(snsResult)}`);
+        await this.sns.publish(params).promise();
     }
 
     /**

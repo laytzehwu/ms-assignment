@@ -10,6 +10,34 @@ By the way, it didn't stop me to commit this assignment. I would like to show an
 
 You may refer [swagger.yaml](./swagger.yaml). Unfortunately, my company laptop only allow me to run it in localhost ( see my [poc-swagger-js](https://github.com/laytzehwu/poc-swagger-js) ). By the way, [postman](./Order%20capture.postman_collection.json) is working with the testing site.
 
+### Unit test
+
+Please don't mind the low test coverage, the unit test is existed. Follow below steps, you can get the test report:
+
+1. Clone this repo:
+
+> git clone https://github.com/laytzehwu/ms-assignment.git
+
+2. Go to this assingment
+
+> cd assignment1
+
+3. Install lambda-layer
+
+> cd lambda-layers/nodejs/modules
+> 
+> npm i
+
+4. Install test-suit, back to the root of this repo:
+
+> cd assignment1
+>
+> cd tests
+>
+> npm i
+>
+> npm t
+
 ## System design
 
 ![system design](./assets/order-capture.jpg)
