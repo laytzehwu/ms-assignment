@@ -12,6 +12,8 @@ You may refer [swagger.yaml](./swagger.yaml). Unfortunately, my company laptop o
 
 ## System design
 
+![system design](./assets/order-capture.jpg)
+
 By referring [sam-template.yaml], you may see above design.
 
 ### Rest Api
@@ -31,10 +33,17 @@ By referring [sam-template.yaml], you may see above design.
 
 | Method |  Path  | Remarks |
 |--------|--------|---------|
-|  POST  | /account | Create an order and store in [AccountDynamoDBTable](#accountdynamodbtable)|
+|  POST  | /account | Update customer credit balance in [AccountDynamoDBTable](#accountdynamodbtable)|
 
+- [StockUpdateFunction](./aws/sam-template.yaml#L501-L522) a [AWS Lambda] receives Rest calls from [ApiGatewayApi] and handles below requests:
+
+| Method |  Path  | Remarks |
+|--------|--------|---------|
+|  POST  | /stock   | Update product stock balance in [StockDynamoDBTable](#stockdynamodbtable) |
 
 ### Fan-out
+
+![fan-out](./assets/fan-out.jpg)
 
 [OrderAPIGatewayFuntion] received the order(s), it just only stores it(them) to [OrderDynamoDBTable](#orderdynamodbtable) then trigger [AWS Simple Notification Service (SNS)].
 
@@ -42,9 +51,30 @@ In this assignment, [OrderTopic] was created and distributes the work to [Balanc
 
 - [OrderTopic] is an [AWS Simple Notification Service (SNS)], not only send email, it also can makes http/https call. Most important is able to trigger [AWS Lambda].
 
-- [BalanceCheckerQueue] is an [AWS Simple Queue Service (SQS)],  
+- [BalanceCheckerQueue] is an [AWS Simple Queue Service (SQS)], it is a queue to keep input and trigger [BalanceCheckerFunction] smoothly 
 
-- [StockCheckerQueue] is an [AWS Simple Queue Service (SQS)], 
+- [StockCheckerQueue] is an [AWS Simple Queue Service (SQS)], it is a queue to keep input and trigger [StockCheckerFunction] smoothly
+
+- [BalanceCheckerFunction] is [AWS Lambda], it received order and check customer credit balance from [AccountDynamoDBTable](#accountdynamodbtable) and trigger [OrderUpdateQueue] after job done.
+
+- [StockCheckerFunction] is [AWS Lambda], it received order and check stock balance from [StockDynamoDBTable](#stockdynamodbtable) and trigger [OrderUpdateQueue] after job done.
+
+
+### Shipment queue
+
+Beside the checkers, there is shipment:
+
+![shipment](./assets/shipment.jpg)
+
+- [OrderUpdateQueue] is the starting point of shipment process. It is receiving order status update then 'queue', trigger [OrderUpdateFunction]. 
+
+- [OrderUpdateFunction] receive status and update [OrderDynamoDBTable](#orderdynamodbtable). It ensure all the checkers finished their work at the end, trigger []. 
+
+- [ShipOrderFunction] get confirm from [OrderUpdateFunction], it update [AccountDynamoDBTable](#accountdynamodbtable) and [StockDynamoDBTable](#stockdynamodbtable) for account & stock balance.
+
+## Logic
+
+
 
 ## Storage
 
@@ -70,10 +100,13 @@ Run [deploy.sh](./deploy.sh) which is invoking [AWS SAM] to build and deploy a [
 
 ## What is missing?
 
-Because of AWS EKS is expense, my solution is using serverless. There is no container in the solution. By the way, please refer [Assigment 4](../assignment4/README.md) for Build and Dockerized
+### Docker container
 
+Because of AWS EKS is expense, my solution is using serverless. There is no container in the solution. By the way, please refer [Assigment 4](../assignment4/README.md#build--dockerized) for Build and Dockerized
 
+### Code coverage
 
+Low code coverage :(, there is better coverage and report in [Assigment 4](../assignment4/README.md#about-unit).
 
 
 [CloudFormation]: https://aws.amazon.com/cloudformation/
@@ -89,3 +122,10 @@ Because of AWS EKS is expense, my solution is using serverless. There is no cont
 [OrderAPIGatewayFuntion]: ./aws/sam-template.yaml#L414-L450
 [BalanceCheckerQueue]: ./aws/sam-template.yaml#L353-L358
 [StockCheckerQueue]: ./aws/sam-template.yaml#L360-L365
+[BalanceCheckerFunction]: ./aws/sam-template.yaml#L475-L499
+[StockCheckerFunction]: ./aws/sam-template.yaml#L524-L548
+
+[OrderUpdateQueue]: ./aws/sam-template.yaml#L367-L372
+[OrderUpdateFunction]: ./aws/sam-template.yaml#L550-L573
+[ShipOrderFunction]:  ./aws/sam-template.yaml#L575-L593
+
